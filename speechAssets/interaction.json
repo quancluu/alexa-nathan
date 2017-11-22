@@ -1,0 +1,99 @@
+{
+  "languageModel": {
+    "intents": [
+      {
+        "name": "AMAZON.CancelIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.HelpIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.StopIntent",
+        "samples": []
+      },
+      {
+        "name": "MyStockIntent",
+        "samples": [
+          "about my stocks",
+          "how are my stocks doing",
+          "about my stocks {DATE}",
+          "how are my stocks doing {DATE}",
+          "tell me about my stocks {DATE}"
+        ],
+        "slots": [
+          {
+            "name": "DATE",
+            "type": "AMAZON.DATE"
+          }
+        ]
+      },
+      {
+        "name": "TrendIntent",
+        "samples": [
+          "about twitter trending",
+          "about trending on twitter",
+          "about trending",
+          "what's trending right now",
+          "whats trending right now",
+          "whats trending now",
+          "what's trending now",
+          "about trending now"
+        ],
+        "slots": []
+      },
+      {
+        "name": "TrumpTweetIntent",
+        "samples": [
+          "about latest tweets",
+          "give me latest tweets",
+          "about the trump {DATE}",
+          "about president {DATE}",
+          "tell me about the president",
+          "tell me about tweets from the president",
+          "about Trump latest tweets",
+          "give me Trump latest tweet",
+          "give me Trump's latest tweets",
+          "about Trumps latest tweets",
+          "about Trumps last tweet",
+          "get Trump latest tweets",
+          "about Trump last tweets",
+          "get Trump last tweets",
+          "about Trump latest tweet",
+          "get Trump latest tweet",
+          "about Trump last tweet",
+          "get Trump last tweet",
+          "about trumps tweet",
+          "about trump",
+          "about the president",
+          "about tweet from Trump",
+          "about tweets from trump",
+          "to give me tweets from Trump",
+          "to give me latest tweets from Trump",
+          "to give me tweets from trum",
+          "about tweets from the president",
+          "about tweet from the president",
+          "to give me tweets from the president",
+          "what did trump tweet today",
+          "what did the president tweet today",
+          "what did the president do today"
+        ],
+        "slots": [
+          {
+            "name": "DATE",
+            "type": "AMAZON.DATE"
+          }
+        ]
+      },
+      {
+        "name": "WelcomeIntent",
+        "samples": [
+          "what can you do"
+        ],
+        "slots": []
+      }
+    ],
+    "invocationName": "nathan"
+  }
+}

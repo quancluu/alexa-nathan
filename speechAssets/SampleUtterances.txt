@@ -1,0 +1,22 @@
+MyColorIsIntent  my color is {Color}
+MyColorIsIntent  my favorite color is {Color}
+WhatsMyColorIntent whats my color
+WhatsMyColorIntent what is my color
+WhatsMyColorIntent say my color
+WhatsMyColorIntent tell me my color
+WhatsMyColorIntent whats my favorite color
+WhatsMyColorIntent what is my favorite color
+WhatsMyColorIntent say my favorite color
+WhatsMyColorIntent tell me my favorite color
+WhatsMyColorIntent tell me what my favorite color is
+MyStockIntent about my stocks {DATE}
+MyStockIntent how are my stocks doing {DATE}
+MyStockIntent tell me about my stocks {DATE}
+TrumpTweetIntent about Trump latest tweets
+TrumpTweetIntent get Trump latest tweets
+TrumpTweetIntent about Trump last tweets
+TrumpTweetIntent get Trump last tweets
+TrumpTweetIntent about Trump latest tweet
+TrumpTweetIntent get Trump latest tweet
+TrumpTweetIntent about Trump last tweet
+TrumpTweetIntent get Trump last tweet
