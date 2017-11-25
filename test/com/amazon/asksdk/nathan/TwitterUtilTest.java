@@ -89,8 +89,8 @@ public class TwitterUtilTest {
 
     @Test
     public void testGetTweetsByUser() throws Exception {
-        final String userName = "realDonaldTrump";
-        //    final String userName = "JeffBezos";
+     //   final String userName = "realDonaldTrump";
+        final String userName = "JeffBezos";
         TwitterUtil twitterUtil = new TwitterUtil();
         final org.json.JSONArray jsonArray = twitterUtil.getTweetsByUser(userName);
 
@@ -174,6 +174,48 @@ public class TwitterUtilTest {
 
     }
 
+    @Test
+    public void testSearchUserByName() throws Exception {
+
+
+        System.setProperty("twitter4j.oauth.consumerKey", consumerKey);
+        System.setProperty("twitter4j.oauth.consumerSecret", consumerSecret);
+        System.setProperty("twitter4j.oauth.accessToken", accessToken);
+        System.setProperty("twitter4j.oauth.accessTokenSecret", accessTokenSecret);
+        System.setProperty("twitter4j.jsonStoreEnabled", "true");
+
+        ConfigurationBuilder cb = new ConfigurationBuilder();
+        cb.setOAuthConsumerKey(consumerKey); // INPUT CREDENTIALS HERE!!
+        cb.setOAuthConsumerSecret(consumerSecret);
+        cb.setOAuthAccessToken(accessToken);
+        cb.setOAuthAccessTokenSecret(accessTokenSecret);
+        cb.setJSONStoreEnabled(true);
+
+        Twitter twitter = new TwitterFactory(cb.build()).getInstance();
+
+
+     //   QueryResult result = twitter.search(query);
+        ResponseList<User> result = twitter.searchUsers("trump", 1);
+        System.out.println(result);
+        // Get the top user
+
+        final User user = result.get(0);
+        final String screenName = user.getScreenName();
+
+        System.out.println(screenName);
+
+
+/*
+         twitter = TwitterFactory.getSingleton();
+        query = new Query("from:realDonaldTrump");
+        result = twitter.search(query);
+        for (Status status : result.getTweets()) {
+            System.out.println("@" + status.getUser().getScreenName() + ":" + status.getText());
+        }
+        */
+
+    }
+
 
     @Test
     public void testGetTwitterStream() throws Exception {
@@ -245,7 +287,11 @@ public class TwitterUtilTest {
 
         authenticate();
         final String searchResult = getTrendTopics();
-        final JSONObject jsonObject = new JSONObject(searchResult);
+        final JSONArray jsonArray = new JSONArray(searchResult);
+
+        System.out.println(jsonArray);
+
+        /*
         final org.json.JSONArray jsonArray = jsonObject.getJSONArray("statuses");
 
         final int size = jsonArray.length();
@@ -258,7 +304,7 @@ public class TwitterUtilTest {
                 final String text = jsonItem.getString("full_text");
                 System.out.println("text=" + text);
             }
-        }
+        }*/
     }
 
     private String getTweetDetails(final String id) throws Exception {
@@ -278,6 +324,32 @@ public class TwitterUtilTest {
     private String searchTweet(final String from) throws Exception {
         final String query = "from:" + from + "%20AND%20-filter:retweets%20AND%20-filter:replies";
         HttpGet httpGet = new HttpGet("https://api.twitter.com/1.1/search/tweets.json?count=4&q=" + query + "&tweet_mode=extended");
+
+        // construct a normal HTTPS request and include an Authorization
+        // header with the value of Bearer <>
+        httpGet.setHeader("Authorization", "Bearer " + auth.access_token);
+        httpGet.setHeader("Content-Type", "application/json");
+        // update the results with the body of the response
+        final String results = getResponseBody(httpGet);
+
+        return results;
+    }
+
+
+    @Test
+    public void testSearchUser() throws Exception {
+        authenticate();
+
+        final String result = searchUser("Twitter%20API");
+        System.out.println(result);
+
+    }
+    private String searchUser(final String user) throws Exception {
+    //    HttpGet httpGet = new HttpGet("https://api.twitter.com/1.1/users/search.json?q=" + user + "&page=1&count=3");
+
+        // https://api.twitter.com/1.1/users/show.json?screen_name=twitterdev
+
+       HttpGet httpGet = new HttpGet("https://api.twitter.com/1.1/users/show.json?screen_name=donald%20trump");
 
         // construct a normal HTTPS request and include an Authorization
         // header with the value of Bearer <>

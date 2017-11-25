@@ -11,6 +11,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.json.*;
 import org.json.JSONArray;
+import org.junit.*;
 import twitter4j.*;
 import twitter4j.JSONObject;
 import twitter4j.TimeZone;
@@ -138,7 +139,7 @@ public class TwitterUtil {
             query += "%20AND%20from:" + from;
         }
 
-        HttpGet httpGet = new HttpGet("https://api.twitter.com/1.1/search/tweets.json?count=4&q=" + query+"&tweet_mode=extended");
+        HttpGet httpGet = new HttpGet("https://api.twitter.com/1.1/search/tweets.json?count=5&q=" + query+"&tweet_mode=extended");
 
         // construct a normal HTTPS request and include an Authorization
         // header with the value of Bearer <>
@@ -183,6 +184,37 @@ public class TwitterUtil {
         final org.json.JSONArray jsonArray = jsonObject.getJSONArray("statuses");
 
         return jsonArray;
+    }
+
+    public User getUserInfoByUserName(final String userName) throws Exception {
+
+
+        System.setProperty("twitter4j.oauth.consumerKey", consumerKey);
+        System.setProperty("twitter4j.oauth.consumerSecret", consumerSecret);
+        System.setProperty("twitter4j.oauth.accessToken", accessToken);
+        System.setProperty("twitter4j.oauth.accessTokenSecret", accessTokenSecret);
+        System.setProperty("twitter4j.jsonStoreEnabled", "true");
+
+        ConfigurationBuilder cb = new ConfigurationBuilder();
+        cb.setOAuthConsumerKey(consumerKey); // INPUT CREDENTIALS HERE!!
+        cb.setOAuthConsumerSecret(consumerSecret);
+        cb.setOAuthAccessToken(accessToken);
+        cb.setOAuthAccessTokenSecret(accessTokenSecret);
+        cb.setJSONStoreEnabled(true);
+
+        Twitter twitter = new TwitterFactory(cb.build()).getInstance();
+
+
+        //   QueryResult result = twitter.search(query);
+        ResponseList<User> result = twitter.searchUsers(userName, 1);
+        System.out.println(result);
+        // Get the top user
+
+        final User user = result.get(0);
+        final String screenName = user.getScreenName();
+
+        System.out.println(screenName);
+        return user;
     }
 
     public static void example() throws TwitterException {

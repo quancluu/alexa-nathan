@@ -30,6 +30,7 @@ import com.amazon.speech.speechlet.SessionStartedRequest;
 import com.amazon.speech.speechlet.SpeechletV2;
 import com.amazon.speech.speechlet.SpeechletResponse;
 import com.amazon.speech.json.SpeechletRequestEnvelope;
+import twitter4j.User;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -155,7 +156,7 @@ public class NathanSpeechlet implements SpeechletV2 {
             return doMyStockIntent(intent, session);
         } else if ("DoneIntent".equals(intentName)) {
             return doMyStockIntent(intent, session);
-        }else if ("CompanyIntent".equals(intentName)) {
+        } else if ("CompanyIntent".equals(intentName)) {
             return doCompanyIntent(intent, session);
         } else if ("StockIntent".equals(intentName)) {
             return doStockIntent(intent, session);
@@ -381,6 +382,7 @@ public class NathanSpeechlet implements SpeechletV2 {
         }
         final String dateSpeech = TwitterUtil.getDateSpeech(dateValue, "yyyy-MM-dd");
 
+        // TODO: you are asking for stock prices of the following company:
         speechBuilder.append("On " + dateSpeech + ", ");
         for (final String symbol : myStocks) {
             final String companyName = mapSymbolToCompany.get(symbol);
@@ -432,7 +434,6 @@ public class NathanSpeechlet implements SpeechletV2 {
                     while (it.hasNext()) {
                         final String key = it.next().toString();
                         speechBuilder.append(". ");
-                        //    speechBuilder.append(key).append(" at: ");
                         speechBuilder.append(item.get(key));
                         speechBuilder.append(" . ");
                     }
@@ -566,14 +567,8 @@ public class NathanSpeechlet implements SpeechletV2 {
         symbol = getSymbolByCompanyName(companyName.toLowerCase());
         if (symbol == null) {
             speechText = "Sorry. I am unable to find the symbol for company name " + companyName + ". Please try another company?";
-         //   speechText += "What's the company name?";
             boolean isAskResponse = true;
             return getSpeechletResponse(speechText, repromptText, isAskResponse);
-
-            //    return getSpeechletResponse(speechText, repromptText, false);
-            //   return newAskResponse("<speak>" + speechText + "</speak>", true, repromptText, false);
-
-
         }
 
         Date myDate = new Date();
@@ -614,8 +609,10 @@ public class NathanSpeechlet implements SpeechletV2 {
         String speechText = "";
 
         if (companySlot != null) {
-            // return doStockIntent(intent, session);
             final String value = companySlot.getValue();
+            if (StringUtils.isEmpty(value)) {
+                return doMyStockIntent(intent, session);
+            }
             if (value.toLowerCase().contains("no")) {
                 return doMyStockIntent(intent, session);
             }
@@ -625,7 +622,6 @@ public class NathanSpeechlet implements SpeechletV2 {
                 boolean isAskResponse = true;
                 return getSpeechletResponse(speechText, repromptText, isAskResponse);
             }
-
 
             speechText = "You asked for company name " + value + " . What else? ";
 
@@ -663,10 +659,6 @@ public class NathanSpeechlet implements SpeechletV2 {
             // speechText += " What's the company name? ";
             boolean isAskResponse = true;
             return getSpeechletResponse(speechText, repromptText, isAskResponse);
-
-            //    return getSpeechletResponse(speechText, repromptText, false);
-            //   return newAskResponse("<speak>" + speechText + "</speak>", true, repromptText, false);
-
 
         }
 
@@ -739,28 +731,30 @@ public class NathanSpeechlet implements SpeechletV2 {
 
     }
 
-    private String cleanText(final String textRaw) throws Exception {
+    private String cleanText(final String inTextRaw) throws Exception {
+        String textRaw = inTextRaw;
         int index = textRaw.indexOf("https://");
         if (index < 0) {
             index = textRaw.indexOf("http://");
         }
 
         if (index > 0) {
-            return textRaw.substring(0, index);
+            textRaw = textRaw.substring(0, index);
         }
 
+        textRaw = textRaw.trim();
         return textRaw;
     }
 
     private SpeechletResponse doTrumpIntent(final Intent intent, final Session session) {
         // Get the slots from the intent.
+
         String repromptText = null;
         int maxTweets = 3;
         final String maxTweetsValue = System.getenv("MAX_TWEETS");
         if (StringUtils.isEmpty(maxTweetsValue) == false) {
             maxTweets = Integer.parseInt(maxTweetsValue);
         }
-        //    final String userName = "realDonaldTrump";
         String[] userNameList = {"realDonaldTrump", "Leadershipfreak", "JeffBezos"};
 
         final String userList = System.getenv("USER_LIST");
@@ -768,16 +762,36 @@ public class NathanSpeechlet implements SpeechletV2 {
             userNameList = userList.split(",");
         }
 
-        final int length = userNameList.length;
-
-        String nameList = ""; // "Here are the latest tweets from ";
         String speechText = "";
+
         try {
             final TwitterUtil twitterUtil = new TwitterUtil();
 
+            final Slot personSlot = intent.getSlot("PERSON");
+            if (personSlot != null) {
+                final String personValue = personSlot.getValue();
+
+                if (StringUtils.isEmpty(personValue)) {
+
+                } else {
+
+                    final User user = twitterUtil.getUserInfoByUserName(personValue.trim());
+                    if (user != null) {
+                        userNameList = new String[]{user.getScreenName()};
+                        mapNameToSpeech.put(user.getScreenName(), user.getName());
+                    } else {
+                        // ignore.
+                    }
+                }
+            }
+
+            final int length = userNameList.length;
+
+            String nameList = ""; // "Here are the latest tweets from ";
+
             for (String userName : userNameList) {
                 userName = userName.trim();
-                final String speechName = mapNameToSpeech.get(userName);
+                final String speechName = mapNameToSpeech.get(userName);// + " with screen name " + userName;
 
                 try {
                     if (userName.equals(userNameList[length - 1])) {
@@ -794,8 +808,11 @@ public class NathanSpeechlet implements SpeechletV2 {
                         }
                     }
                     final org.json.JSONArray jsonArray = twitterUtil.getTweetsByUser(userName);
-
-                    for (int i = 0; i < maxTweets; i++) {
+                    int numTweets = jsonArray.length();
+                    if (numTweets > maxTweets) {
+                        numTweets = maxTweets;
+                    }
+                    for (int i = 0; i < numTweets; i++) {
 
                         final org.json.JSONObject jsonObject = jsonArray.getJSONObject(i);
                         final String text = cleanText(jsonObject.getString("full_text"));
@@ -813,6 +830,7 @@ public class NathanSpeechlet implements SpeechletV2 {
                     speechText = "Got exception " + e;
                 }
             }
+
             speechText = "Here are the latest tweets from " + nameList + ": " + speechText + "Goodbye!";
         } catch (Exception e) {
             speechText = "Got exception " + e;
