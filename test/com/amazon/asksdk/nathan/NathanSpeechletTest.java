@@ -15,9 +15,9 @@ import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NathanSpeechletTest {
 
@@ -38,6 +38,26 @@ public class NathanSpeechletTest {
         final String data = HttpUtil.httpGetWithHeader(api, HEADERS);
 
         System.out.println(data);
+    }
+
+    @Test
+    public void testReplaceLast() throws Exception {
+        List<String> companyList = new ArrayList<>();
+        companyList.add("a");
+        companyList.add("b");
+        companyList.add("c");
+
+        final String replaceWith = " and ";
+
+        final String companyString = "a,b,c";
+        System.out.println(companyString.replaceAll(",*$", " and "));
+
+
+        String reverse = new StringBuffer(companyString).reverse().toString();
+        reverse = reverse.replaceFirst(",", new StringBuffer(replaceWith).reverse().toString());
+
+        final String output = new StringBuffer(reverse).reverse().toString();
+        System.out.println(output);
     }
 
     @Test

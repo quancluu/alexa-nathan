@@ -42,4 +42,13 @@ public class MiscUtil {
 
         return null;
     }
+
+    static public String replaceLastStringWith(final String originalString, final String stringToBeReplaced, final String replaceWith) {
+
+        String reverse = new StringBuffer(originalString).reverse().toString();
+        reverse = reverse.replaceFirst(stringToBeReplaced, new StringBuffer(replaceWith).reverse().toString());
+
+        return new StringBuffer(reverse).reverse().toString();
+
+    }
 }

@@ -154,6 +154,8 @@ public class NathanSpeechlet implements SpeechletV2 {
 
         if ("MyStockIntent".equals(intentName)) {
             return doMyStockIntent(intent, session);
+        } else if ("OpenStockRequestIntent".equals(intentName)) {
+            return doOpenStockRequestIntent(intent, session);
         } else if ("DoneIntent".equals(intentName)) {
             return doMyStockIntent(intent, session);
         } else if ("CompanyIntent".equals(intentName)) {
@@ -320,7 +322,14 @@ public class NathanSpeechlet implements SpeechletV2 {
                     if (StringUtils.isEmpty(dateValue)) {
                         dateValue = item.getString("date");
                         dateValue = TwitterUtil.getDateSpeech(dateValue, "yyyy-MM-dd");
-                        speechBuilder.append("On " + dateValue + ", here are the closed prices : ");
+                        speechBuilder.append("On " + dateValue);
+
+                        if (myStocks.length == 1) {
+                            speechBuilder.append(" Here is the closed price: ");
+
+                        } else {
+                            speechBuilder.append(" Here are the closed price: ");
+                        }
                     }
 
                     item.remove("ex_dividend");
@@ -338,13 +347,20 @@ public class NathanSpeechlet implements SpeechletV2 {
 
                     final Iterator it = item.keys();
                     speechBuilder.append(" Company " + companyName).append(" ");
+                    final String closedPrice = item.get("close").toString();
+
+                    speechBuilder.append(". $");
+                    speechBuilder.append(closedPrice.trim());
+                    speechBuilder.append(" . ");
+
+                    /*
                     while (it.hasNext()) {
                         final String key = it.next().toString();
                         speechBuilder.append(". ");
-                        //    speechBuilder.append(key).append(" at: ");
                         speechBuilder.append(item.get(key));
                         speechBuilder.append(" . ");
                     }
+                    */
                 }
             } catch (Exception e) {
                 throw new Exception("Got exception for api=" + api + ". e=" + e);
@@ -376,14 +392,35 @@ public class NathanSpeechlet implements SpeechletV2 {
         String myStocks[] = stockSymbol.split(",");// {"fb", "ua", "twtr", "msft", "aapl", "googl"};
 
         StringBuilder speechBuilder = new StringBuilder();
-        String closedPriceSpeec = "here are the closed prices";
+        String closedPriceSpeech = "here are the closed prices";
         if (myStocks.length == 1) {
-            closedPriceSpeec = "here is the closed price for";
+            closedPriceSpeech = "here is the closed price for";
         }
         final String dateSpeech = TwitterUtil.getDateSpeech(dateValue, "yyyy-MM-dd");
 
         // TODO: you are asking for stock prices of the following company:
-        speechBuilder.append("On " + dateSpeech + ", ");
+        final List<String> companyList = new ArrayList<>();
+        for (final String symbol : myStocks) {
+            final String companyName = mapSymbolToCompany.get(symbol);
+            companyList.add(companyName);
+        }
+
+        if (companyList.size() == 1) {
+            speechBuilder.append("You are asking for the stock price of the following ");
+            speechBuilder.append("company: ");
+
+        } else {
+            speechBuilder.append("You are asking for the stock prices of the following ");
+            speechBuilder.append("companies: ");
+        }
+
+        final String companyListSpeech = MiscUtil.replaceLastStringWith(
+            companyList.toString().replace("[","").replace("]",""), ",", " and ");
+
+        speechBuilder.append(companyListSpeech);
+
+        speechBuilder.append(". ");
+        speechBuilder.append("On " + dateSpeech + " ");
         for (final String symbol : myStocks) {
             final String companyName = mapSymbolToCompany.get(symbol);
 
@@ -398,7 +435,13 @@ public class NathanSpeechlet implements SpeechletV2 {
                     if (speechBuilder.toString().contains("No price information is available")) {
 
                     } else {
-                        speechBuilder.append(" No price information is available, but here is the latest info I have . ");
+                        speechBuilder.append(" No price information is available ");
+                        if (myStocks.length == 1) {
+                            speechBuilder.append("for ").append(companyName);
+                        } else {
+
+                        }
+                        speechBuilder.append(", but here is the latest info I have. ");
                     }
                     final int index = lastStockInfo.indexOf("Company");
                     final String dateInfo = lastStockInfo.substring(0, index);
@@ -406,13 +449,11 @@ public class NathanSpeechlet implements SpeechletV2 {
                         lastStockInfo = lastStockInfo.substring(index);
                     }
                     speechBuilder.append(lastStockInfo);
-
-                    //   return speechBuilder.toString();
                 } else {
-                    if (speechBuilder.toString().contains(closedPriceSpeec)) {
+                    if (speechBuilder.toString().contains(closedPriceSpeech)) {
 
                     } else {
-                        speechBuilder.append(" ").append(closedPriceSpeec).append(" : ");
+                        speechBuilder.append(" ").append(closedPriceSpeech).append(" : ");
                     }
 
                     final JSONObject item = jsonArrayData.getJSONObject(0);
@@ -429,24 +470,39 @@ public class NathanSpeechlet implements SpeechletV2 {
                     item.remove("high");
                     item.remove("low");
 
-                    final Iterator it = item.keys();
+                //    final Iterator it = item.keys();
                     speechBuilder.append(" Company " + companyName).append(" ");
+                    final String closedPrice = item.get("close").toString();
+
+                    speechBuilder.append(". $");
+                    speechBuilder.append(closedPrice.trim());
+                    speechBuilder.append(" . ");
+                    /*
                     while (it.hasNext()) {
                         final String key = it.next().toString();
                         speechBuilder.append(". ");
                         speechBuilder.append(item.get(key));
                         speechBuilder.append(" . ");
-                    }
+                    }*/
                 }
             } catch (Exception e) {
                 throw new Exception("Got exception for api=" + api + ". e=" + e);
             }
-            speechBuilder.append(" . ");
         }
 
-        speechBuilder.append(" Goodbye .");
+        speechBuilder.append(" Goodbye!");
 
         return speechBuilder.toString().replace("Company", "");
+    }
+
+    private SpeechletResponse doOpenStockRequestIntent(final Intent intent, final Session session) {
+        String speechText = "Hi, what company would you like to know about the stock price? " +
+            " You can say: facebook or apple or microsoft. " +
+            "When done, say: That's all.";
+        String repromptText = "";
+
+        return getSpeechletResponse(speechText, repromptText, true);
+
     }
 
     private SpeechletResponse doMyStockIntent(final Intent intent, final Session session) {
@@ -483,7 +539,7 @@ public class NathanSpeechlet implements SpeechletV2 {
             // dateSlot is null. Use default.
         }
         try {
-            String mySymbolList = "fb,ua,twtr,msft,aapl,googl";
+            String mySymbolList = "fb,ua,twtr";
             final String attValueList = (String) session.getAttribute("symbolList");
             if (StringUtils.isEmpty(attValueList)) {
 
@@ -609,16 +665,24 @@ public class NathanSpeechlet implements SpeechletV2 {
         String speechText = "";
 
         if (companySlot != null) {
-            final String value = companySlot.getValue();
+            String value = companySlot.getValue();
             if (StringUtils.isEmpty(value)) {
                 return doMyStockIntent(intent, session);
             }
-            if (value.toLowerCase().contains("no")) {
-                return doMyStockIntent(intent, session);
+
+            if (value.toLowerCase().startsWith("under")) {
+                value = "Under Armour";
             }
+
+            /*
+            if (value.toLowerCase().contains("that")) {
+                return doMyStockIntent(intent, session);
+            }*/
+
             final String symbol = getSymbolByCompanyName(value.toLowerCase());
             if (StringUtils.isEmpty(symbol)) {
-                speechText = "Sorry. I am unable to find stock symbol for company name " + value + ". Please try another company?";
+                speechText = "Sorry. I am unable to find stock symbol for company name " + value +
+                    ". Please try another company?";
                 boolean isAskResponse = true;
                 return getSpeechletResponse(speechText, repromptText, isAskResponse);
             }
@@ -628,7 +692,7 @@ public class NathanSpeechlet implements SpeechletV2 {
             String attValueList = (String) session.getAttribute("symbolList");
             if (StringUtils.isEmpty(attValueList)) {
                 attValueList = "";
-                speechText += "When done, say. No more.";
+                speechText += "When done, say. That's all.";
 
             } else {
                 attValueList += ",";
